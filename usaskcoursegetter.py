@@ -15,7 +15,8 @@ driver.find_elements_by_tag_name('input')[1].click()
 time.sleep(1)
 subjects = Select(driver.find_elements_by_tag_name('select')[0])
 all_subjects = [o.get_attribute('value') for o in subjects.options]
-subjects.select_by_value(all_subjects[3])
+subjects.select_by_value(all_subjects[112])
+#subjects.select_by_value(all_subjects[3])
 campus = Select(driver.find_elements_by_tag_name('select')[2])
 campus.deselect_all()
 all_campus = [o.get_attribute('value') for o in campus.options]
@@ -24,20 +25,27 @@ campus.select_by_value(all_campus[13])
 driver.find_elements_by_tag_name('input')[0].click()
 trs = driver.find_elements_by_class_name("datadisplaytable")[0].find_elements_by_tag_name('tr')
 classInfo = {}
+lastClassNeedAdditional = None
 # iterate over all the rows
 for tr in trs:
     tds = tr.find_elements_by_tag_name('td')
+    if "You must also register in additional classes at the same time." in tr.text:
+        lastClassNeedAdditional["LABED"] = True
     if len(tds) > 1:
         subject = tds[2].text
         course_number = tds[3].text
+        if course_number[-1] == "*":
+            course_number=course_number[:-1]
         course = subject.strip() + course_number.strip()
         if course != "CRNSubj":
             if course == "":
                 course = list(classInfo.keys())[-1]
             if course not in classInfo:
                 classInfo[course] = {
-                    "LEC": [],
-                    "OTHER": []
+                    "LEC" : [],
+                    "LAB" : [],
+                    "TUT" : [],
+                    "OTHER" : []
                 }
             new_section = {
                 "CRN": tds[1].text,
@@ -45,15 +53,20 @@ for tr in trs:
                 "TYPE": tds[8].text,
                 "DAY": tds[9].text,
                 "TIME": tds[10].text,
-                "AVAIL": tds[11].text,
-                "TEACH": tds[12].text,
-                "DATE": tds[13].text,
+                "AVAIL": tds[12].text,
+                "TEACH": tds[13].text,
+                "DATE": tds[14].text,
                 "LABED": False
             }
-            if new_section["TYPE"] != "LEC":
-                classInfo[course]["OTHER"].append(new_section)
-            else:
+            if new_section["TYPE"] == "LEC":
                 classInfo[course]["LEC"].append(new_section)
+            elif new_section["TYPE"] == "TUT":
+                classInfo[course]["TUT"].append(new_section)
+            elif new_section["TYPE"] == "LAB":
+                classInfo[course]["LAB"].append(new_section)
+            else:
+                classInfo[course]["OTHER"].append(new_section)
+
 pprint.pprint(classInfo)
 
 '''
