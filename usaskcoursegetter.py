@@ -16,7 +16,7 @@ time.sleep(1)
 subjects = Select(driver.find_elements_by_tag_name('select')[0])
 all_subjects = [o.get_attribute('value') for o in subjects.options]
 subjects.select_by_value(all_subjects[112])
-#subjects.select_by_value(all_subjects[3])
+subjects.select_by_value(all_subjects[3])
 campus = Select(driver.find_elements_by_tag_name('select')[2])
 campus.deselect_all()
 all_campus = [o.get_attribute('value') for o in campus.options]
