@@ -15,8 +15,8 @@ driver.find_elements_by_tag_name('input')[1].click()
 time.sleep(1)
 subjects = Select(driver.find_elements_by_tag_name('select')[0])
 all_subjects = [o.get_attribute('value') for o in subjects.options]
-subjects.select_by_value(all_subjects[112])
-subjects.select_by_value(all_subjects[3])
+subjects.select_by_value(all_subjects[111])
+#subjects.select_by_value(all_subjects[3])
 campus = Select(driver.find_elements_by_tag_name('select')[2])
 campus.deselect_all()
 all_campus = [o.get_attribute('value') for o in campus.options]
@@ -41,12 +41,7 @@ for tr in trs:
             if course == "":
                 course = list(classInfo.keys())[-1]
             if course not in classInfo:
-                classInfo[course] = {
-                    "LEC" : [],
-                    "LAB" : [],
-                    "TUT" : [],
-                    "OTHER" : []
-                }
+                classInfo[course] = {}
             new_section = {
                 "CRN": tds[1].text,
                 "SEC": tds[4].text,
@@ -55,17 +50,34 @@ for tr in trs:
                 "TIME": tds[10].text,
                 "AVAIL": tds[12].text,
                 "TEACH": tds[13].text,
-                "DATE": tds[14].text,
-                "LABED": False
+                "DATE": tds[14].text
             }
+            if new_section["TYPE"] not in classInfo[course]:
+                classInfo[course][new_section["TYPE"]] = []
             if new_section["TYPE"] == "LEC":
+                new_section["LAB"] = []
+                new_section["LABED"] = True
+                if len(classInfo[course]["LEC"]) > 0 and classInfo[course]["LEC"][0]["LAB"] != []:
+                    for i in classInfo[course]["LEC"]:
+                        i["LABED"] = False
                 classInfo[course]["LEC"].append(new_section)
+                lastClassNeedAdditional = new_section
             elif new_section["TYPE"] == "TUT":
-                classInfo[course]["TUT"].append(new_section)
+                if lastClassNeedAdditional:
+                    for i in classInfo[course]["LEC"]:
+                        if i["LABED"]:
+                            i["LAB"].append(new_section)
+                else:
+                    classInfo[course]["TUT"].append(new_section)
             elif new_section["TYPE"] == "LAB":
-                classInfo[course]["LAB"].append(new_section)
+                if lastClassNeedAdditional:
+                    for i in classInfo[course]["LEC"]:
+                        if i["LABED"]:
+                            i["LAB"].append(new_section)
+                else:
+                    classInfo[course]["LAB"].append(new_section)
             else:
-                classInfo[course]["OTHER"].append(new_section)
+                classInfo[course][new_section["TYPE"]].append(new_section)
 
 pprint.pprint(classInfo)
 
