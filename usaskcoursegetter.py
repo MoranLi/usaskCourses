@@ -39,7 +39,6 @@ for tr in trs:
         lastClassNeedAdditional["LABED"] = True
     # len(tds) == 1 means this is only one section, usually an information section to tell subject etc
     if len(tds) > 1:
-        
         subject = tds[2].text
         course_number = tds[3].text
         if course_number[-1] == "*":
