@@ -54,11 +54,8 @@ for tr in trs:
             if course == "":
                 course = list(classInfo.keys())[-1]
             if course not in classInfo:
-                classInfo[course] = {
-                    "types": [],
-                    "section": []
-                }
-            # SUBCLASS is the other section combine to current section
+                classInfo[course] = {}
+            # SUBCLASS referes to section combine with it
             new_section = {
                 "CRN": tds[1].text,
                 "SEC": tds[4].text,
@@ -68,22 +65,18 @@ for tr in trs:
                 "AVAIL": tds[12].text,
                 "TEACH": tds[13].text,
                 "DATE": tds[14].text,
-                "SUBCLASS":[]
+                "SUBCLASS": []
             }
-            # currently a class have up to combination of 3 types
-            # so store first type as first level, second type in second level(["SUBCLASS"] of first level)
-            # and third type as third level(["SUBCLASS"] of second level)
-            if new_section["TYPE"] not in classInfo[course]["types"]:
-                classInfo[course]["types"].append(new_section["TYPE"])
-            if classInfo[course]["types"].index(new_section["TYPE"]) == 0:
-                classInfo[course]["section"].append(new_section)
-            elif classInfo[course]["types"].index(new_section["TYPE"]) == 1:
-                for i in classInfo[course]["section"]:
-                    i["SUBCLASS"].append(new_section)
-            elif classInfo[course]["types"].index(new_section["TYPE"]) == 2:
-                for i in classInfo[course]["section"]:
-                    for j in i["SUBCLASS"]:
-                        j["SUBCLASS"].append(new_section)
+            if new_section["TYPE"] not in classInfo[course]:
+                classInfo[course][new_section["TYPE"]] = []
+            classInfo[course][new_section["TYPE"]].append(new_section)
+course_key = list(classInfo.keys())
+for course in course_key:
+    keys = list(classInfo[course].keys())
+    for i,k in enumerate(keys):
+        for j in classInfo[course][k]:
+            if i+1 < len(keys):
+                j["SUBCLASS"] = classInfo[course][keys[i+1]]
 json_file.write(json.dumps(classInfo))
 
 '''
