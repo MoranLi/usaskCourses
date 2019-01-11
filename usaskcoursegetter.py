@@ -21,11 +21,13 @@ driver.find_elements_by_tag_name('input')[1].click()
 time.sleep(1)
 subjects = Select(driver.find_elements_by_tag_name('select')[0])
 all_subjects = [o.get_attribute('value') for o in subjects.options]
+for i,n in enumerate(all_subjects):
+    print(str(i)+":"+n)
 # select subject, currently physics and agriculture
 # chemistry for case a class have 3 section
-subjects.select_by_value(all_subjects[27])
+#subjects.select_by_value(all_subjects[27])
 # physics for case a lab repeat per 2 week
-#subjects.select_by_value(all_subjects[111])
+subjects.select_by_value(all_subjects[113])
 # agriculture basic test case
 #subjects.select_by_value(all_subjects[3])
 # select campus, currently main campus and web
@@ -69,7 +71,12 @@ for tr in trs:
             }
             if new_section["TYPE"] not in classInfo[course]:
                 classInfo[course][new_section["TYPE"]] = []
-            classInfo[course][new_section["TYPE"]].append(new_section)
+            if new_section["CRN"] != " ":
+                lastClassNeedAdditional = new_section
+                classInfo[course][new_section["TYPE"]].append(new_section)
+            else:
+                lastClassNeedAdditional["SUBCLASS"].append(new_section)
+'''
 course_key = list(classInfo.keys())
 for course in course_key:
     keys = list(classInfo[course].keys())
@@ -77,6 +84,7 @@ for course in course_key:
         for j in classInfo[course][k]:
             if i+1 < len(keys):
                 j["SUBCLASS"] = classInfo[course][keys[i+1]]
+'''
 json_file.write(json.dumps(classInfo))
 
 '''
