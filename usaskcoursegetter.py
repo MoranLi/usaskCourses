@@ -1,9 +1,14 @@
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
 import time
 import pprint
+import json
+json_file = open("sect_info.json", "w+")
 # load driver
-driver = webdriver.Chrome(executable_path='chromedriver.exe')
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+driver = webdriver.Chrome(executable_path='chromedriver.exe', options=chrome_options)
 # open browser and go to link
 driver.get('https://pawnss.usask.ca/ban/bwckschd.p_disp_dyn_sched')
 driver.maximize_window()
@@ -17,7 +22,11 @@ time.sleep(1)
 subjects = Select(driver.find_elements_by_tag_name('select')[0])
 all_subjects = [o.get_attribute('value') for o in subjects.options]
 # select subject, currently physics and agriculture
-subjects.select_by_value(all_subjects[111])
+# chemistry for case a class have 3 section
+subjects.select_by_value(all_subjects[27])
+# physics for case a lab repeat per 2 week
+#subjects.select_by_value(all_subjects[111])
+# agriculture basic test case
 #subjects.select_by_value(all_subjects[3])
 # select campus, currently main campus and web
 campus = Select(driver.find_elements_by_tag_name('select')[2])
@@ -34,9 +43,6 @@ lastClassNeedAdditional = None
 # iterate over all the rows
 for tr in trs:
     tds = tr.find_elements_by_tag_name('td')
-    # labed last lecture course find need a lab / tut combine with it
-    if "You must also register in additional classes at the same time." in tr.text:
-        lastClassNeedAdditional["LABED"] = True
     # len(tds) == 1 means this is only one section, usually an information section to tell subject etc
     if len(tds) > 1:
         subject = tds[2].text
@@ -48,7 +54,11 @@ for tr in trs:
             if course == "":
                 course = list(classInfo.keys())[-1]
             if course not in classInfo:
-                classInfo[course] = {}
+                classInfo[course] = {
+                    "types": [],
+                    "section": []
+                }
+            # SUBCLASS is the other section combine to current section
             new_section = {
                 "CRN": tds[1].text,
                 "SEC": tds[4].text,
@@ -57,36 +67,24 @@ for tr in trs:
                 "TIME": tds[10].text,
                 "AVAIL": tds[12].text,
                 "TEACH": tds[13].text,
-                "DATE": tds[14].text
+                "DATE": tds[14].text,
+                "SUBCLASS":[]
             }
-            if new_section["TYPE"] not in classInfo[course]:
-                classInfo[course][new_section["TYPE"]] = []
-            if new_section["TYPE"] == "LEC":
-                new_section["LAB"] = []
-                new_section["LABED"] = True
-                if len(classInfo[course]["LEC"]) > 0 and classInfo[course]["LEC"][0]["LAB"] != []:
-                    for i in classInfo[course]["LEC"]:
-                        i["LABED"] = False
-                classInfo[course]["LEC"].append(new_section)
-                lastClassNeedAdditional = new_section
-            elif new_section["TYPE"] == "TUT":
-                if lastClassNeedAdditional:
-                    for i in classInfo[course]["LEC"]:
-                        if i["LABED"]:
-                            i["LAB"].append(new_section)
-                else:
-                    classInfo[course]["TUT"].append(new_section)
-            elif new_section["TYPE"] == "LAB":
-                if lastClassNeedAdditional:
-                    for i in classInfo[course]["LEC"]:
-                        if i["LABED"]:
-                            i["LAB"].append(new_section)
-                else:
-                    classInfo[course]["LAB"].append(new_section)
-            else:
-                classInfo[course][new_section["TYPE"]].append(new_section)
-
-pprint.pprint(classInfo)
+            # currently a class have up to combination of 3 types
+            # so store first type as first level, second type in second level(["SUBCLASS"] of first level)
+            # and third type as third level(["SUBCLASS"] of second level)
+            if new_section["TYPE"] not in classInfo[course]["types"]:
+                classInfo[course]["types"].append(new_section["TYPE"])
+            if classInfo[course]["types"].index(new_section["TYPE"]) == 0:
+                classInfo[course]["section"].append(new_section)
+            elif classInfo[course]["types"].index(new_section["TYPE"]) == 1:
+                for i in classInfo[course]["section"]:
+                    i["SUBCLASS"].append(new_section)
+            elif classInfo[course]["types"].index(new_section["TYPE"]) == 2:
+                for i in classInfo[course]["section"]:
+                    for j in i["SUBCLASS"]:
+                        j["SUBCLASS"].append(new_section)
+json_file.write(json.dumps(classInfo))
 
 '''
 class course_info:

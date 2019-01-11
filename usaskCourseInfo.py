@@ -6,7 +6,7 @@ import json
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
-driver = webdriver.Chrome(executable_path='chromedriver.exe',chrome_options=chrome_options)
+driver = webdriver.Chrome(executable_path='chromedriver.exe',options=chrome_options)
 # open browser and go to link
 driver.get('http://www.usask.ca/calendar/coursecat/?subj_code=ACB#results')
 driver.maximize_window()
