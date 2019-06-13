@@ -11,6 +11,7 @@ assignees: ''
  * OS: [e.g. iOS]
  * Database: [e.g. chrome, safari]
  * Version: [e.g. 22]
+ * Subversion: [e.g. 1001]
 
 **APAR status**
 A clear and concise description of what the bug is.
